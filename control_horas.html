@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#12213B">
+<title>Control de horas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#12213B;
+    --ink-800:#1A2E52;
+    --ink-700:#28456F;
+    --paper-100:#EDEEE2;
+    --paper-200:#E1E2D0;
+    --paper-300:#D2D3BE;
+    --card:#F7F7EF;
+    --amber-500:#E2A33B;
+    --amber-600:#CC8E28;
+    --amber-700:#B97D1E;
+    --text:#1B1B18;
+    --muted:#726C5D;
+    --coral-500:#D9694F;
+    --coral-700:#A8452F;
+    --teal-500:#3E7C6B;
+    --teal-700:#2A5A4D;
+    --radius-sm:10px;
+    --radius-md:16px;
+    --radius-lg:22px;
+    --font-display:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
+    --font-body:'Work Sans',system-ui,-apple-system,sans-serif;
+    --shell-w:430px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    background:#D8D9C8;
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:0;
+  }
+  #shell{
+    width:100%;
+    max-width:var(--shell-w);
+    min-height:100vh;
+    background:var(--paper-100);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    box-shadow:0 0 40px rgba(0,0,0,0.18);
+  }
+
+  header.topbar{
+    background:var(--ink-900);
+    color:var(--paper-100);
+    padding:22px 20px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.topbar::after{
+    content:"";
+    position:absolute;
+    right:-30px;
+    top:-30px;
+    width:140px;
+    height:140px;
+    border:1px dashed rgba(237,238,226,0.18);
+    border-radius:50%;
+  }
+  .topbar-eyebrow{
+    font-family:var(--font-display);
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--amber-500);
+    margin:0 0 4px;
+  }
+  .topbar-title{
+    font-size:22px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .topbar-sub{
+    font-size:13px;
+    color:rgba(237,238,226,0.62);
+    margin:4px 0 0;
+  }
+
+  main{
+    flex:1;
+    padding:20px 18px 100px;
+  }
+  .view{display:none;}
+  .view.active{display:block;animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  h2.section-title{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--muted);
+    font-weight:600;
+    margin:0 0 10px;
+  }
+
+  /* ---- Registro ---- */
+  .date-card{
+    background:var(--ink-900);
+    color:var(--paper-100);
+    border-radius:var(--radius-lg);
+    padding:18px 18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .date-nav-btn{
+    width:38px;height:38px;
+    border-radius:50%;
+    border:1px solid rgba(237,238,226,0.25);
+    background:transparent;
+    color:var(--paper-100);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .date-nav-btn:active{background:rgba(237,238,226,0.12);}
+  .date-center{text-align:center;position:relative;cursor:pointer;}
+  .date-pick-hint{
+    font-size:9.5px;
+    color:rgba(237,238,226,0.45);
+    margin:5px 0 0;
+    font-family:var(--font-body);
+    letter-spacing:0.02em;
+  }
+  .date-input-hidden{
+    position:absolute;
+    top:0;left:0;
+    width:100%;height:100%;
+    opacity:0;
+    border:none;
+    padding:0;
+    cursor:pointer;
+  }
+  .date-dow{
+    font-family:var(--font-display);
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--amber-500);
+    margin:0 0 2px;
+  }
+  .date-num{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:700;
+    margin:0;
+  }
+  .badge-hoy{
+    display:inline-block;
+    margin-top:6px;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:var(--amber-500);
+    color:var(--ink-900);
+    padding:2px 8px;
+    border-radius:20px;
+    font-weight:700;
+  }
+
+  .hours-card{
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-lg);
+    padding:22px 18px;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .hours-label{
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin:0 0 10px;
+    font-weight:600;
+  }
+  .hours-control{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+  }
+  .stepper-btn{
+    width:44px;height:44px;
+    border-radius:50%;
+    border:1px solid var(--paper-300);
+    background:var(--paper-100);
+    font-size:20px;
+    color:var(--ink-900);
+    cursor:pointer;
+  }
+  .stepper-btn:active{background:var(--paper-200);}
+  .hours-value{
+    font-family:var(--font-display);
+    font-size:44px;
+    font-weight:700;
+    color:var(--ink-900);
+    min-width:110px;
+  }
+  .hours-value span{font-size:18px;color:var(--muted);font-weight:500;}
+
+  .chip-row{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .chip{
+    font-family:var(--font-display);
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:20px;
+    border:1px solid var(--paper-300);
+    background:var(--paper-100);
+    color:var(--ink-800);
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--amber-500);
+    border-color:var(--amber-500);
+    color:var(--ink-900);
+    font-weight:700;
+  }
+
+  .tramo-card{
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .tramo-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .tramo-header span{
+    font-family:var(--font-display);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .tramo-remove{
+    background:transparent;
+    border:none;
+    color:var(--coral-700);
+    font-size:12px;
+    font-weight:600;
+    font-family:var(--font-body);
+    cursor:pointer;
+    padding:2px 0;
+  }
+  .tramo-times{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .time-field{flex:1;}
+  .time-field label{
+    display:block;
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-weight:600;
+    margin:0 0 5px;
+  }
+  .time-field input[type="time"]{
+    width:100%;
+    border:1px solid var(--paper-300);
+    background:var(--paper-100);
+    border-radius:var(--radius-sm);
+    padding:9px 8px;
+    font-family:var(--font-display);
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink-900);
+  }
+  .descanso-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+    padding-top:8px;
+    border-top:1px dashed var(--paper-300);
+  }
+  .descanso-toggle span{flex:none;}
+  .descanso-toggle span.descanso-unit{color:var(--muted);font-size:12px;}
+  .descanso-toggle input[type="checkbox"]{
+    width:18px;height:18px;
+    accent-color:var(--amber-500);
+    flex:none;
+  }
+  .descanso-toggle input[type="number"]{
+    width:52px;
+    margin-left:auto;
+    border:1px solid var(--paper-300);
+    background:var(--paper-100);
+    border-radius:8px;
+    padding:5px 6px;
+    font-family:var(--font-display);
+    font-size:13px;
+    text-align:center;
+  }
+  .btn-add-tramo{
+    width:100%;
+    background:transparent;
+    border:1px dashed var(--paper-300);
+    color:var(--ink-700);
+    border-radius:var(--radius-sm);
+    padding:11px;
+    font-size:13px;
+    font-weight:600;
+    font-family:var(--font-body);
+    cursor:pointer;
+  }
+  .hours-breakdown{
+    font-size:12px;
+    color:var(--muted);
+    margin:8px 0 0;
+    font-family:var(--font-display);
+  }
+
+  label.field-label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .text-input{
+    width:100%;
+    border:1px solid var(--paper-300);
+    background:var(--card);
+    border-radius:var(--radius-sm);
+    padding:11px 12px;
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--text);
+  }
+  .text-input:focus{outline:2px solid var(--amber-500);outline-offset:1px;}
+  .date-input{
+    width:150px;
+    font-family:var(--font-display);
+    font-weight:600;
+    text-align:right;
+    color-scheme:light;
+  }
+
+  .btn-primary{
+    width:100%;
+    background:var(--amber-500);
+    color:var(--ink-900);
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:15px;
+    font-size:15px;
+    font-weight:700;
+    font-family:var(--font-body);
+    margin-top:18px;
+    cursor:pointer;
+    letter-spacing:0.01em;
+  }
+  .btn-primary:active{background:var(--amber-600);}
+  .btn-secondary{
+    width:100%;
+    background:transparent;
+    color:var(--ink-900);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-sm);
+    padding:13px;
+    font-size:14px;
+    font-weight:600;
+    font-family:var(--font-body);
+    margin-top:10px;
+    cursor:pointer;
+  }
+  .btn-danger-text{
+    width:100%;
+    background:transparent;
+    color:var(--coral-700);
+    border:none;
+    padding:12px;
+    font-size:13px;
+    font-weight:600;
+    font-family:var(--font-body);
+    margin-top:4px;
+    cursor:pointer;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:92px;
+    left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--ink-900);
+    color:var(--paper-100);
+    padding:11px 18px;
+    border-radius:30px;
+    font-size:13px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:50;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .dot{width:7px;height:7px;border-radius:50%;background:var(--teal-500);}
+
+  /* ---- Listado ---- */
+  .month-bar{
+    background:var(--ink-900);
+    border-radius:var(--radius-lg);
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .month-label{
+    color:var(--paper-100);
+    font-weight:600;
+    font-size:15px;
+    text-transform:capitalize;
+  }
+  .summary-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+  }
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 4px;font-weight:600;}
+  .stat-value{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink-900);margin:0;}
+
+  .ficha{
+    display:flex;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-md);
+    margin-bottom:9px;
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+  }
+  .ficha::before{
+    content:"";
+    position:absolute;
+    left:58px;
+    top:0;bottom:0;
+    width:0;
+    border-left:1.5px dashed var(--paper-300);
+  }
+  .ficha-date{
+    width:58px;
+    text-align:center;
+    padding:12px 4px;
+    flex-shrink:0;
+  }
+  .ficha-dow{font-family:var(--font-display);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+  .ficha-day{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--ink-900);}
+  .ficha-body{
+    flex:1;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .ficha-note{font-size:12px;color:var(--muted);margin:2px 0 0;}
+  .ficha-hours{
+    font-family:var(--font-display);
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink-900);
+  }
+  .ficha-hours span{font-size:11px;color:var(--muted);font-weight:500;}
+  .ficha-edit-icon{color:var(--paper-300);font-size:16px;margin-left:10px;}
+
+  .print-bar{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+  .btn-outline-sm{
+    flex:1;
+    background:transparent;
+    border:1px solid var(--ink-900);
+    color:var(--ink-900);
+    border-radius:var(--radius-sm);
+    padding:11px;
+    font-size:13px;
+    font-weight:600;
+    font-family:var(--font-body);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .btn-outline-sm:disabled{
+    border-color:var(--paper-300);
+    color:var(--muted);
+    cursor:not-allowed;
+    background:var(--paper-200);
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:30px 16px;
+    color:var(--muted);
+  }
+  .empty-state p{margin:4px 0;font-size:13px;}
+  .empty-state .empty-icon{font-size:28px;margin-bottom:6px;}
+
+  /* ---- Nominas ---- */
+  .subtab-row{
+    display:flex;
+    background:var(--paper-200);
+    border-radius:30px;
+    padding:4px;
+    margin-bottom:16px;
+  }
+  .subtab-btn{
+    flex:1;
+    text-align:center;
+    padding:9px 6px;
+    border-radius:26px;
+    border:none;
+    background:transparent;
+    font-family:var(--font-body);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .subtab-btn.active{background:var(--ink-900);color:var(--paper-100);}
+
+  .payslip{
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-lg);
+    padding:0;
+    overflow:hidden;
+  }
+  .payslip-head{
+    background:var(--ink-900);
+    color:var(--paper-100);
+    padding:16px 18px;
+  }
+  .payslip-head-title{font-size:14px;font-weight:600;margin:0;}
+  .payslip-head-sub{font-size:12px;color:rgba(237,238,226,0.6);margin:3px 0 0;font-family:var(--font-display);}
+  .payslip-row{
+    display:flex;
+    justify-content:space-between;
+    padding:11px 18px;
+    border-bottom:1px dashed var(--paper-300);
+    font-size:13.5px;
+  }
+  .payslip-row.section{
+    background:var(--paper-100);
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    border-bottom:1px solid var(--paper-300);
+  }
+  .payslip-row .val{font-family:var(--font-display);font-weight:600;}
+  .payslip-row .concept-calc{font-size:11px;color:var(--muted);font-family:var(--font-display);margin-top:2px;}
+  .payslip-row.subtotal{background:var(--paper-100);font-weight:700;border-bottom:1px solid var(--paper-300);}
+  .payslip-row.subtotal .val{font-family:var(--font-display);}
+  .payslip-row.total{
+    background:var(--ink-900);
+    color:var(--paper-100);
+    font-weight:700;
+    font-size:15px;
+    border-bottom:none;
+  }
+  .payslip-row.total .val{font-family:var(--font-display);color:var(--amber-500);font-size:17px;}
+  .payslip-row.deduct .val{color:var(--coral-700);}
+
+  .match-banner{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(62,124,107,0.12);
+    border:1px solid var(--teal-500);
+    color:var(--teal-700);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  .match-banner.warn{
+    background:rgba(217,105,79,0.12);
+    border-color:var(--coral-500);
+    color:var(--coral-700);
+  }
+
+  /* ---- Ajustes ---- */
+  .settings-group{
+    background:var(--card);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-lg);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .settings-group h3{
+    font-size:13px;
+    margin:0 0 12px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .tarifa-card{
+    background:var(--paper-100);
+    border:1px solid var(--paper-300);
+    border-radius:var(--radius-md);
+    padding:14px 14px 4px;
+    margin-bottom:12px;
+  }
+  .tarifa-header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:12px;
+    padding-bottom:10px;
+    border-bottom:1px dashed var(--paper-300);
+  }
+  .tarifa-vigencia label{
+    display:block;
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-weight:600;
+    margin:0 0 5px;
+  }
+  .tarifa-badge{
+    font-size:10px;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    background:var(--teal-500);
+    color:#EAF3EF;
+    padding:4px 9px;
+    border-radius:20px;
+    font-weight:700;
+  }
+  .cotiz-toggle{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:transparent;
+    border:none;
+    border-top:1px dashed var(--paper-300);
+    margin-top:6px;
+    padding:10px 0 2px;
+    font-family:var(--font-body);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-700);
+    cursor:pointer;
+  }
+  .cotiz-toggle.open{color:var(--amber-700);}
+  .cotiz-toggle .cotiz-total{
+    margin-left:auto;
+    margin-right:6px;
+    font-family:var(--font-display);
+    font-size:11px;
+    color:var(--muted);
+    font-weight:500;
+  }
+  .cotiz-detail{
+    padding:8px 0 2px;
+  }
+  .cotiz-head{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr;
+    gap:6px;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    font-weight:700;
+    padding:0 2px 6px;
+  }
+  .cotiz-head span:nth-child(2), .cotiz-head span:nth-child(3){text-align:center;}
+  .cotiz-row{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr;
+    gap:6px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .cotiz-row span{font-size:12px;color:var(--text);}
+  .cotiz-row input{
+    width:100%;
+    text-align:center;
+    border:1px solid var(--paper-300);
+    background:var(--card);
+    border-radius:8px;
+    padding:6px 4px;
+    font-family:var(--font-display);
+    font-size:12px;
+    color:var(--text);
+  }
+  .cotiz-row input:disabled{color:var(--muted);background:var(--paper-200);}
+  .field-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .field-row:last-child{margin-bottom:0;}
+  .field-row label{font-size:13.5px;color:var(--text);flex:1;}
+  .field-row input{
+    width:110px;
+    text-align:right;
+    border:1px solid var(--paper-300);
+    background:var(--paper-100);
+    border-radius:var(--radius-sm);
+    padding:9px 10px;
+    font-family:var(--font-display);
+    font-size:14px;
+    color:var(--text);
+  }
+  .field-hint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin:-8px 0 12px;
+  }
+  .stub-note{
+    display:flex;
+    gap:10px;
+    background:rgba(226,163,59,0.14);
+    border:1px solid var(--amber-500);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    font-size:12.5px;
+    color:var(--amber-700);
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .install-steps{
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.7;
+    margin:0;
+    padding-left:18px;
+  }
+
+  /* ---- Bottom nav ---- */
+  nav.bottomnav{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    background:var(--ink-900);
+    display:flex;
+    padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+    max-width:var(--shell-w);
+    margin:0 auto;
+    z-index:40;
+  }
+  .navbtn{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:rgba(237,238,226,0.5);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding:6px 2px;
+    font-family:var(--font-body);
+    font-size:10.5px;
+    font-weight:600;
+    cursor:pointer;
+    border-radius:12px;
+  }
+  .navbtn .navicon{font-size:19px;line-height:1;}
+  .navbtn.active{color:var(--amber-500);}
+
+  /* ---- Icons (inline svg via mask, simple strokes) ---- */
+  .icn{width:20px;height:20px;display:inline-block;vertical-align:middle;}
+  .print-block{display:none;}
+
+  @media print{
+    body *{visibility:hidden;}
+    .print-block.print-active, .print-block.print-active *{visibility:visible;}
+    .print-block.print-active{
+      display:block;
+      position:absolute;
+      top:0;left:0;
+      width:100%;
+      background:#fff;
+      color:#1B1B18;
+      font-family:var(--font-body);
+      padding:16px 22px;
+      font-size:11px;
+    }
+    .pr-eulen{color:#1B3F91;font-weight:700;font-size:17px;margin:0 0 2px;font-style:italic;letter-spacing:-0.01em;}
+    .pr-topline{
+      display:flex;
+      justify-content:space-between;
+      border-bottom:2.5px solid #1B3F91;
+      padding-bottom:10px;
+      margin-bottom:10px;
+    }
+    .pr-company-name{color:#1B3F91;font-weight:700;font-size:15px;margin:0 0 2px;}
+    .pr-company-addr{color:#1B3F91;font-size:10px;margin:0;}
+    .pr-worker-block{text-align:right;font-size:11px;}
+    .pr-worker-block p{margin:0 0 2px;font-weight:600;}
+    .pr-title{
+      text-align:center;
+      font-size:13px;
+      color:#1B3F91;
+      letter-spacing:0.03em;
+      margin:10px 0 10px;
+      font-weight:700;
+    }
+    table.pr-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:8px;
+      font-size:10.5px;
+    }
+    .pr-meta-table td{border:1px solid #1B3F91;padding:4px 8px;}
+    .pr-meta-table .pr-label{background:#D7DCF2;color:#1B3F91;font-weight:700;width:120px;}
+    .pr-grid5 th, .pr-grid5 td{border:1px solid #1B3F91;padding:4px 6px;text-align:center;}
+    .pr-grid5 th{background:#1B3F91;color:#fff;font-weight:600;font-size:9.5px;text-transform:uppercase;}
+
+    .pr-cotiz-block{display:flex;gap:0;margin-bottom:8px;border:1px solid #1B3F91;}
+    .pr-cotiz-side{width:150px;flex-shrink:0;border-right:1px solid #1B3F91;padding:6px;background:#F7F8FC;}
+    .pr-side-title{font-size:8.5px;color:#1B3F91;font-weight:700;text-transform:uppercase;margin:0 0 6px;line-height:1.3;}
+    table.pr-side-table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:6px;}
+    .pr-side-table td{padding:2px 0;border:none;}
+    .pr-side-table td:last-child{text-align:right;font-family:var(--font-display);}
+    .pr-side-table tr.pr-bold-row td{font-weight:700;border-top:1px solid #99a3c9;padding-top:3px;}
+    .pr-fecha-line{font-size:9px;color:#444;margin:2px 0;}
+    table.pr-cotiz-table{width:100%;border-collapse:collapse;font-size:9.5px;margin:0;}
+    .pr-cotiz-table th, .pr-cotiz-table td{border:1px solid #1B3F91;padding:3px 5px;text-align:right;}
+    .pr-cotiz-table th{background:#D7DCF2;color:#1B3F91;font-size:8.5px;text-transform:uppercase;font-weight:700;}
+    .pr-cotiz-table td:first-child, .pr-cotiz-table th:first-child{text-align:left;}
+    .pr-cotiz-table .pr-subtotal{background:#D7DCF2;font-weight:700;}
+
+    .pr-concepts th, .pr-concepts td{border:1px solid #1B3F91;padding:4px 8px;text-align:right;}
+    .pr-concepts th{background:#D7DCF2;color:#1B3F91;text-transform:uppercase;font-size:9.5px;}
+    .pr-concepts td:first-child, .pr-concepts th:first-child{text-align:left;}
+    .pr-concepts .pr-subtotal{background:#D7DCF2;font-weight:700;}
+
+    .pr-liquido-row{display:flex;justify-content:space-between;align-items:baseline;border-top:2.5px solid #1B3F91;padding-top:6px;margin-bottom:10px;}
+    .pr-liquido{font-size:14px;font-weight:700;color:#1B3F91;margin:0;}
+    .pr-liquido span{font-family:var(--font-display);}
+    .pr-cc{font-size:10px;color:#444;margin:0;}
+
+    .pr-plusconceptos{border:1px solid #1B3F91;}
+    .pr-plusconceptos td{border:1px solid #1B3F91;padding:3px 8px;font-size:9.5px;}
+    .pr-plusconceptos td:last-child{width:90px;}
+    .pr-plus-title{background:#C7CEEA;color:#1B3F91;font-weight:700;text-transform:uppercase;font-size:9px;text-align:center;}
+
+    .pr-firma-block{margin:8px 0;padding-top:6px;border-top:1.5px solid #1B3F91;}
+    .pr-firma-title{background:#C7CEEA;color:#1B3F91;font-weight:700;text-transform:uppercase;font-size:9px;margin:0 0 10px;padding:3px 8px;}
+    .pr-firma-line{font-size:10px;color:#444;margin:0 0 6px;padding:0 8px;}
+
+    .pr-indique-title{background:#C7CEEA;color:#1B3F91;font-weight:700;text-transform:uppercase;font-size:9px;margin:8px 0 6px;padding:3px 8px;}
+    .pr-checks-row{display:flex;gap:24px;margin-bottom:6px;padding:0 8px;}
+    .pr-check-item{font-size:10px;color:#333;display:flex;align-items:center;gap:5px;}
+    .pr-checkbox{display:inline-block;width:10px;height:10px;border:1px solid #1B3F91;flex-shrink:0;}
+
+    .pr-footnote{font-size:9px;color:#726C5D;border-top:1px dashed #ccc;padding-top:6px;margin-top:10px;}
+    .pr-legal-footer{font-size:8.5px;color:#888;margin:4px 0 0;}
+
+    .pr-parte-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #1B3F91;padding-bottom:8px;margin-bottom:8px;}
+    .pr-parte-title-inline{color:#1B3F91;font-size:15px;font-weight:700;margin:0;letter-spacing:0.02em;}
+    .pr-anomes-table td{border:1px solid #1B3F91;padding:4px 8px;}
+    .pr-anomes-table .pr-label{background:#D7DCF2;color:#1B3F91;font-weight:700;}
+    .pr-mes-checks{display:flex;gap:5px;padding:4px 6px !important;flex-wrap:nowrap;}
+    .pr-mes-box{display:inline-flex;flex-direction:column;align-items:center;font-size:8px;color:#444;font-weight:600;}
+    .pr-mes-box .pr-checkbox{width:10px;height:10px;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;color:#1B3F91;font-weight:700;font-family:var(--font-body);}
+    .pr-mes-box.pr-mes-active{color:#1B3F91;}
+    .pr-mes-box.pr-mes-active .pr-checkbox{border-color:#1B3F91;border-width:1.5px;}
+
+    .pr-parte-grid{border:1px solid #1B3F91;}
+    .pr-parte-grid th, .pr-parte-grid td{border:1px solid #1B3F91;padding:2px 4px;text-align:center;font-size:8.5px;}
+    .pr-parte-grid th{background:#C7CEEA;color:#1B3F91;text-transform:uppercase;font-size:7.5px;}
+    .pr-parte-grid th.pr-th-yellow, .pr-parte-grid th.pr-th-days{background:#EDE6A8;}
+    .pr-parte-grid td:first-child{font-weight:700;color:#1B3F91;width:22px;background:#F5F1D6;}
+    .pr-parte-grid td:last-child, .pr-parte-grid th:last-child{text-align:left;}
+    .pr-parte-grid tr.pr-empty td:first-child{color:#1B3F91;}
+    .pr-parte-grid tr.pr-empty td{color:#ccc;}
+    .pr-parte-grid .pr-total-row{background:#EDE6A8;font-weight:700;color:#1B3F91;}
+    @page{size:A4;margin:12mm;}
+  }
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <header class="topbar">
+    <p class="topbar-eyebrow" id="topbar-eyebrow">Ficha diaria</p>
+    <h1 class="topbar-title" id="topbar-title">Control de horas</h1>
+    <p class="topbar-sub" id="topbar-sub">Registra, comprueba y guarda tus jornadas</p>
+  </header>
+
+  <main>
+
+    <!-- ================= REGISTRO ================= -->
+    <section class="view active" id="view-registro">
+      <div class="date-card">
+        <button class="date-nav-btn" id="btn-day-prev" aria-label="Día anterior">&#8249;</button>
+        <div class="date-center" id="reg-date-center" role="button" aria-label="Elegir fecha">
+          <p class="date-dow" id="reg-dow">Viernes</p>
+          <p class="date-num" id="reg-daynum">07/08</p>
+          <span class="badge-hoy" id="reg-badge-hoy" style="visibility:hidden;">Hoy</span>
+          <p class="date-pick-hint">&#128197; Toca para elegir fecha</p>
+          <input type="date" id="reg-date-input" class="date-input-hidden">
+        </div>
+        <button class="date-nav-btn" id="btn-day-next" aria-label="Día siguiente">&#8250;</button>
+      </div>
+
+      <div class="chip-row" id="preset-row" style="margin-bottom:14px;">
+        <button class="chip" id="chip-turno-habitual">Turno habitual 6:00–14:00</button>
+      </div>
+
+      <div id="tramos-list"></div>
+
+      <button class="btn-add-tramo" id="btn-add-tramo">+ Añadir tramo (salió y volvió a entrar)</button>
+
+      <div class="hours-card" style="margin-top:14px;">
+        <p class="hours-label">Horas netas del día</p>
+        <div class="hours-value" id="hr-value" style="justify-content:center;display:flex;align-items:baseline;gap:4px;">7,75<span>h</span></div>
+        <p class="hours-breakdown" id="hr-breakdown">6:00 a 14:00h &middot; bocadillo 15 min</p>
+      </div>
+
+      <label class="field-label" for="note-input">Nota (opcional)</label>
+      <input class="text-input" id="note-input" type="text" placeholder="Almacén norte, sustitución…">
+
+      <button class="btn-primary" id="btn-guardar">Guardar jornada</button>
+      <button class="btn-secondary" id="btn-eliminar-dia" style="display:none;">Eliminar este registro</button>
+    </section>
+
+    <!-- ================= LISTADO ================= -->
+    <section class="view" id="view-listado">
+      <div class="month-bar">
+        <button class="date-nav-btn" id="btn-month-prev" aria-label="Mes anterior">&#8249;</button>
+        <span class="month-label" id="listado-month-label">Agosto 2026</span>
+        <button class="date-nav-btn" id="btn-month-next" aria-label="Mes siguiente">&#8250;</button>
+      </div>
+
+      <div class="summary-row">
+        <div class="stat-card">
+          <p class="stat-label">Días registrados</p>
+          <p class="stat-value" id="stat-dias">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Total horas</p>
+          <p class="stat-value" id="stat-horas">0,0</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Días del mes</h2>
+      <div id="ficha-list"></div>
+
+      <div class="print-bar">
+        <button class="btn-outline-sm" id="btn-print-listado">&#128424; Imprimir / PDF</button>
+        <button class="btn-outline-sm" id="btn-export-backup-2">&#8593; Copia seguridad</button>
+      </div>
+    </section>
+
+    <!-- ================= NOMINAS ================= -->
+    <section class="view" id="view-nominas">
+      <div class="subtab-row">
+        <button class="subtab-btn active" data-sub="verificar">Verificar nómina</button>
+        <button class="subtab-btn" data-sub="resumen">Resumen del mes</button>
+      </div>
+
+      <div id="nom-verificar">
+        <h2 class="section-title">Periodo de la nómina recibida</h2>
+        <div class="field-row" style="margin-bottom:8px;">
+          <label>Desde</label>
+          <input type="date" class="text-input date-input" id="periodo-desde" value="">
+        </div>
+        <div class="field-row" style="margin-bottom:16px;">
+          <label>Hasta</label>
+          <input type="date" class="text-input date-input" id="periodo-hasta" value="">
+        </div>
+        <div class="field-row" style="margin-bottom:8px;">
+          <label>IRPF a aplicar</label>
+          <input class="text-input" id="periodo-irpf" style="width:90px;text-align:right;" value="2,00">
+        </div>
+        <div class="field-row" style="margin-bottom:16px;">
+          <label>Líquido de la nómina recibida (opcional)</label>
+          <input class="text-input" id="periodo-liquido-real" style="width:110px;text-align:right;" placeholder="0,00 €">
+        </div>
+
+        <div id="match-banner-slot"></div>
+        <div class="payslip">
+          <div class="payslip-head">
+            <p class="payslip-head-title">Recibo calculado</p>
+            <p class="payslip-head-sub" id="verificar-head-sub">Elige un periodo</p>
+          </div>
+          <div id="verificar-body"></div>
+        </div>
+      </div>
+
+      <div id="nom-resumen" style="display:none;">
+        <div class="month-bar" style="margin-bottom:14px;">
+          <button class="date-nav-btn" id="btn-resumen-month-prev" aria-label="Mes anterior">&#8249;</button>
+          <span class="month-label" id="resumen-month-label">Agosto 2026</span>
+          <button class="date-nav-btn" id="btn-resumen-month-next" aria-label="Mes siguiente">&#8250;</button>
+        </div>
+        <div class="field-row" style="margin-bottom:16px;">
+          <label>IRPF a aplicar</label>
+          <input class="text-input" id="resumen-irpf" style="width:90px;text-align:right;" value="2,00">
+        </div>
+        <div class="payslip">
+          <div class="payslip-head">
+            <p class="payslip-head-title" id="resumen-head-title">Resumen &middot; Agosto 2026</p>
+            <p class="payslip-head-sub" id="resumen-head-sub">Todo el mes</p>
+          </div>
+          <div id="resumen-body"></div>
+        </div>
+        <p class="field-hint" style="margin-top:10px;">Suma de todas las jornadas del mes, aunque la ETT las reparta luego en varios recibos.</p>
+      </div>
+
+      <div class="print-bar">
+        <button class="btn-outline-sm" id="btn-print-nomina">&#128424; Imprimir / PDF</button>
+      </div>
+    </section>
+
+    <!-- ================= AJUSTES ================= -->
+    <section class="view" id="view-ajustes">
+      <div class="stub-note" id="stub-note">&#9881; Estos son tus datos guardados en este móvil. Puedes editarlos cuando quieras.</div>
+
+      <div class="settings-group">
+        <h3>Datos personales y contrato</h3>
+        <div class="field-row"><label>Nombre y apellidos</label><input id="cfg-nombre" placeholder="Nombre y apellidos" style="width:150px;"></div>
+        <div class="field-row"><label>DNI</label><input id="cfg-dni" placeholder="12345678A"></div>
+        <div class="field-row"><label>Núm. afiliación</label><input id="cfg-afiliacion" placeholder="000000000000"></div>
+        <div class="field-row"><label>Categoría profesional</label><input id="cfg-categoria" placeholder="Auxiliar"></div>
+        <div class="field-row"><label>Cód. trabajador</label><input id="cfg-codtrab" placeholder="12345678A 00000"></div>
+        <div class="field-row"><label>G. Tarifa</label><input id="cfg-gtarifa" placeholder="10"></div>
+        <div class="field-row"><label>Fecha de alta</label><input type="date" class="date-input" id="cfg-fechaalta"></div>
+        <div class="field-row"><label>Antigüedad</label><input type="date" class="date-input" id="cfg-antiguedad"></div>
+        <div class="field-row"><label>Empresa usuaria</label><input id="cfg-empresausuaria" placeholder="Nombre del cliente"></div>
+        <div class="field-row"><label>Dirección (para la nómina)</label><input id="cfg-direccion" placeholder="Calle, número" style="width:130px;"></div>
+        <div class="field-row"><label>Población</label><input id="cfg-poblacion" placeholder="Código postal, población" style="width:130px;"></div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Datos de la ETT</h3>
+        <div class="field-row"><label>Empresa</label><input id="cfg-ett-nombre" value="Flexiplan, S.A.-E.T.T." style="width:150px;"></div>
+        <div class="field-row"><label>C.C.C.</label><input id="cfg-ett-ccc" value="15101335064"></div>
+        <div class="field-row"><label>N.I.F.</label><input id="cfg-ett-nif" value="A79406575"></div>
+        <div class="field-row"><label>Dirección</label><input id="cfg-ett-direccion" value="Ronda de Nelle 140-1º C" style="width:150px;"></div>
+        <div class="field-row"><label>Población</label><input id="cfg-ett-poblacion" value="15007 La Coruña"></div>
+        <div class="field-row"><label>Teléfono</label><input id="cfg-ett-telefono" value="916310800"></div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Historial de tarifas</h3>
+        <p class="field-hint" style="margin-top:0;">Cada jornada usa la tarifa que estaba vigente en su fecha. Si cambia el convenio, añade una entrada nueva — los meses anteriores no se recalculan.</p>
+
+        <div id="tarifas-list">
+        </div>
+
+        <button class="btn-add-tramo" id="btn-add-tarifa">+ Añadir cambio de convenio</button>
+      </div>
+
+      <div class="settings-group">
+        <h3>IRPF</h3>
+        <div class="field-row"><label>Valor por defecto</label><input id="cfg-irpf" value="2,00 %"></div>
+        <p class="field-hint">Se te pedirá confirmarlo cada vez que generes una nómina, porque Eulen lo ajusta con frecuencia.</p>
+      </div>
+
+      <div class="settings-group">
+        <h3>Copia de seguridad</h3>
+        <button class="btn-secondary" id="btn-export-backup" style="margin-top:0;">&#8593; Exportar / guardar en Drive</button>
+        <button class="btn-secondary" id="btn-import-backup">&#8595; Restaurar desde archivo</button>
+        <input type="file" id="import-file-input" accept="application/json" style="display:none;">
+        <p class="field-hint" id="backup-status" style="margin-top:8px;"></p>
+      </div>
+
+      <div class="settings-group">
+        <h3>Instalar en el móvil</h3>
+        <ol class="install-steps">
+          <li>Abre este archivo con Chrome.</li>
+          <li>Toca el menú (&#8942;) arriba a la derecha.</li>
+          <li>Elige "Añadir a pantalla de inicio".</li>
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"><span class="dot"></span><span id="toast-text">Guardado ✓</span></div>
+
+  <nav class="bottomnav">
+    <button class="navbtn active" data-view="registro"><span class="navicon">&#9998;</span>Registro</button>
+    <button class="navbtn" data-view="listado"><span class="navicon">&#9776;</span>Listado</button>
+    <button class="navbtn" data-view="nominas"><span class="navicon">&#128196;</span>Nóminas</button>
+    <button class="navbtn" data-view="ajustes"><span class="navicon">&#9881;</span>Ajustes</button>
+  </nav>
+
+</div>
+
+<div id="print-root" class="print-block">
+  <div class="pr-topline">
+    <div>
+      <p class="pr-eulen">GRUPO EULEN</p>
+      <p class="pr-company-name" id="pr-ett-nombre">FLEXIPLAN, S.A.-E.T.T.</p>
+      <p class="pr-company-addr" id="pr-ett-addr">RONDA DE NELLE 140-1ºC &middot; 15007 LA CORUÑA &middot; 916310800</p>
+    </div>
+    <div class="pr-worker-block">
+      <p id="pr-worker-nombre"></p>
+      <p class="pr-company-addr" id="pr-worker-addr" style="color:#1B1B18;"></p>
+    </div>
+  </div>
+
+  <table class="pr-table pr-meta-table">
+    <tr>
+      <td class="pr-label">Empresa</td>
+      <td id="pr-empresa-nombre">FLEXIPLAN, S.A.-E.T.T.</td>
+      <td class="pr-label">Nombre y apellidos</td>
+      <td id="pr-nombre-linea"></td>
+    </tr>
+    <tr>
+      <td class="pr-label">C.C.C.</td>
+      <td id="pr-ccc">15101335064</td>
+      <td class="pr-label">N.I.F.</td>
+      <td id="pr-nif">A79406575</td>
+    </tr>
+  </table>
+
+  <h1 class="pr-title">RECIBO DE LIQUIDACIÓN</h1>
+
+  <table class="pr-table pr-grid5">
+    <thead>
+      <tr><th>Núm. afiliación</th><th>Categoría profesional</th><th>G. Tarifa</th><th>Per. liquidado</th><th>Cód. trabajador</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="pr-afiliacion">151032191704</td>
+        <td id="pr-categoria">Auxiliar</td>
+        <td id="pr-tarifa">10</td>
+        <td id="pr-periodo">14 al 24 de julio</td>
+        <td id="pr-codtrab"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pr-cotiz-block">
+    <div class="pr-cotiz-side">
+      <p class="pr-side-title">Determ. Bases de Cotización a la Seg. Social</p>
+      <table class="pr-side-table">
+        <tr><td>Remuneración Total</td><td id="pr-remu">705,96 €</td></tr>
+        <tr><td>Prórrata pagas extra</td><td></td></tr>
+        <tr><td>Base IT</td><td></td></tr>
+        <tr class="pr-bold-row"><td>Total</td><td id="pr-base-tot">705,96 €</td></tr>
+      </table>
+      <p class="pr-fecha-line">Fecha de alta: <span id="pr-fecha-alta">14/07/2026</span></p>
+      <p class="pr-fecha-line">Antigüedad: <span id="pr-antig">01/09/2025</span></p>
+    </div>
+    <table class="pr-cotiz-table" id="pr-cotiz-table">
+      <thead>
+        <tr><th rowspan="2">Concepto</th><th rowspan="2">Base</th><th colspan="2">Aportación Empresa</th><th colspan="2">Aportación Trabajador</th></tr>
+        <tr><th>%</th><th>Importe</th><th>%</th><th>Importe</th></tr>
+      </thead>
+      <tbody id="pr-cotiz-body"></tbody>
+      <tfoot id="pr-cotiz-foot"></tfoot>
+    </table>
+  </div>
+
+  <table class="pr-table pr-concepts">
+    <thead>
+      <tr><th>Concepto</th><th>Precio</th><th>Unidad</th><th>Devengos</th><th>Retenciones</th></tr>
+    </thead>
+    <tbody id="pr-concepts-body"></tbody>
+    <tfoot id="pr-concepts-foot"></tfoot>
+  </table>
+
+  <div class="pr-liquido-row">
+    <p class="pr-liquido">Líquido a percibir: <span id="pr-liquido">0,00 €</span></p>
+    <p class="pr-cc">C/C</p>
+  </div>
+
+  <table class="pr-table pr-plusconceptos">
+    <tr><td colspan="2" class="pr-plus-title">Pluses y conceptos</td></tr>
+    <tr><td>Kilometraje</td><td></td></tr>
+    <tr><td>Incentivos</td><td></td></tr>
+    <tr><td>Dietas</td><td></td></tr>
+    <tr><td>Plus&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;.</td><td></td></tr>
+    <tr><td>Plus&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;.</td><td></td></tr>
+    <tr><td>Otros</td><td></td></tr>
+    <tr><td>Otros</td><td></td></tr>
+  </table>
+
+  <div class="pr-firma-block">
+    <p class="pr-firma-title">Conforme trabajador</p>
+    <p class="pr-firma-line">Firma: ______________________________ &nbsp;&nbsp;&nbsp; Fecha: ______________</p>
+  </div>
+
+  <p class="pr-footnote">Documento generado por la app de control de horas a partir de las jornadas registradas y las tarifas configuradas. No sustituye al recibo oficial &mdash; úsalo para comprobar que coincide.</p>
+  <p class="pr-legal-footer" id="pr-legal-footer">Flexiplan S.A. CIF: A-79406575. Nº Autorización Administrativa 79/0007/94 &nbsp;&middot;&nbsp; www.flexiplan.es</p>
+</div>
+
+<div id="print-parte" class="print-block">
+  <div class="pr-parte-header">
+    <div class="pr-parte-header-left">
+      <p class="pr-eulen">EULEN Flexiplán</p>
+      <p class="pr-company-addr">Soluciones de RRHH y Empleo</p>
+    </div>
+    <div class="pr-parte-header-right">
+      <p class="pr-parte-title-inline">PARTE DE HORAS</p>
+    </div>
+  </div>
+
+  <table class="pr-table pr-anomes-table">
+    <tr>
+      <td class="pr-label" style="width:50px;">AÑO</td>
+      <td id="parte-anio" style="width:70px;">2026</td>
+      <td class="pr-label" style="width:40px;">MES</td>
+      <td id="parte-mes-checks" class="pr-mes-checks"></td>
+    </tr>
+  </table>
+
+  <table class="pr-table pr-meta-table">
+    <tr><td class="pr-label">Empresa usuaria</td><td id="parte-empresausuaria-blank">&nbsp;</td></tr>
+    <tr><td class="pr-label">Centro de trabajo</td><td id="parte-centrotrabajo">Calvo</td></tr>
+    <tr><td class="pr-label">Dirección</td><td>&nbsp;</td></tr>
+    <tr><td class="pr-label">Tfno.</td><td>&nbsp;</td></tr>
+  </table>
+
+  <table class="pr-table pr-meta-table">
+    <tr><td class="pr-label">Colaborador</td><td id="parte-colaborador"></td>
+        <td class="pr-label">DNI</td><td id="parte-dni"></td></tr>
+  </table>
+
+  <table class="pr-table pr-parte-grid">
+    <thead>
+      <tr>
+        <th rowspan="2" class="pr-th-days">Días</th>
+        <th colspan="4">Horas</th>
+        <th colspan="2">Incidencias</th>
+        <th rowspan="2" class="pr-th-yellow">Observaciones</th>
+      </tr>
+      <tr>
+        <th>Normales</th><th>Nocturnas</th><th>Extras</th><th>Festivas</th>
+        <th>IT/AT</th><th>Permisos retrib.</th>
+      </tr>
+    </thead>
+    <tbody id="parte-body"></tbody>
+    <tfoot id="parte-foot"></tfoot>
+  </table>
+
+  <table class="pr-table pr-plusconceptos">
+    <tr><td colspan="2" class="pr-plus-title">Pluses y conceptos</td></tr>
+    <tr><td>Kilometraje</td><td></td></tr>
+    <tr><td>Incentivos</td><td></td></tr>
+    <tr><td>Dietas</td><td></td></tr>
+    <tr><td>Plus&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;.</td><td></td></tr>
+    <tr><td>Plus&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;.</td><td></td></tr>
+    <tr><td>Otros</td><td></td></tr>
+    <tr><td>Otros</td><td></td></tr>
+  </table>
+
+  <div class="pr-firma-block">
+    <p class="pr-firma-title">Conforme trabajador</p>
+    <p class="pr-firma-line">Firma: ______________________________ &nbsp;&nbsp;&nbsp; Fecha: ______________</p>
+  </div>
+
+  <p class="pr-indique-title">Indique lo que corresponda</p>
+  <div class="pr-checks-row">
+    <span class="pr-check-item"><span class="pr-checkbox"></span> Fin contrato</span>
+    <span class="pr-check-item"><span class="pr-checkbox"></span> Baja voluntaria</span>
+  </div>
+  <div class="pr-checks-row">
+    <span class="pr-check-item"><span class="pr-checkbox"></span> No superado P.P.</span>
+    <span class="pr-check-item"><span class="pr-checkbox"></span> Continúa servicio</span>
+  </div>
+
+  <p class="pr-fecha-line">Observaciones: ______________________________________________</p>
+
+  <div class="pr-firma-block">
+    <p class="pr-firma-title">Conforme cliente</p>
+    <p class="pr-firma-line">Firma y sello: ______________________________________________</p>
+    <p class="pr-firma-line">Nombre y apellidos: __________________________ &nbsp;&nbsp; Fecha: ______________</p>
+  </div>
+
+  <p class="pr-footnote">Documento generado por la app de control de horas a partir de las jornadas registradas. Revísalo antes de enviarlo a la ETT.</p>
+  <p class="pr-legal-footer">Flexiplan S.A. CIF: A-79406575. Nº Autorización Administrativa 79/0007/94 &nbsp;&middot;&nbsp; www.flexiplan.es</p>
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'controlHorasApp_v1';
+
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var DOW_FULL = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var DOW3 = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  function defaultState(){
+    return {
+      perfil:{
+        nombre:'', dni:'', afiliacion:'', categoria:'',
+        codTrabajador:'', gTarifa:'', fechaAlta:'', antiguedad:'', empresaUsuaria:'',
+        direccion:'', poblacion:''
+      },
+      ett:{ nombre:'Flexiplan, S.A.-E.T.T.', ccc:'15101335064', nif:'A79406575', direccion:'Ronda de Nelle 140-1º C', poblacion:'15007 La Coruña', telefono:'916310800' },
+      irpfDefecto:2.00,
+      tarifas:[
+        { id:'t2026', vigenteDesde:'2026-01-01', salarioBase:8.20, plusExtra:1.48, plusVacaciones:0.74,
+          cotiz:{ contComunes:{emp:23.60,trab:4.70}, atEp:{emp:2.75,trab:0}, desempleo:{emp:5.50,trab:1.55}, formProfesional:{emp:0.60,trab:0.10}, fogasa:{emp:0.20,trab:0}, mei:{emp:0.75,trab:0.15} } }
+      ],
+      entries:{}
+    };
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && parsed.tarifas && parsed.entries) return parsed;
+      }
+    }catch(e){}
+    return defaultState();
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  var state = loadState();
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function toISO(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+  function fromISO(iso){ var p=iso.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+  function addDaysISO(iso,n){ var d=fromISO(iso); d.setDate(d.getDate()+n); return toISO(d); }
+  function todayISO(){ return toISO(new Date()); }
+  function monthKey(iso){ return iso.slice(0,7); }
+  function monthLabel(ym){ var p=ym.split('-').map(Number); var m=MESES[p[1]-1]; return m.charAt(0).toUpperCase()+m.slice(1)+' '+p[0]; }
+  function addMonths(ym,n){ var p=ym.split('-').map(Number); var d=new Date(p[0],p[1]-1+n,1); return d.getFullYear()+'-'+pad2(d.getMonth()+1); }
+  function monthDaysRange(ym){ var p=ym.split('-').map(Number); var start=p[0]+'-'+pad2(p[1])+'-01'; var last=new Date(p[0],p[1],0).getDate(); var end=p[0]+'-'+pad2(p[1])+'-'+pad2(last); return [start,end]; }
+  function periodoHumano(startISO,endISO){
+    var s=fromISO(startISO), e=fromISO(endISO);
+    if(s.getMonth()===e.getMonth() && s.getFullYear()===e.getFullYear()){
+      return s.getDate()+' al '+e.getDate()+' de '+MESES[e.getMonth()];
+    }
+    return s.getDate()+' de '+MESES[s.getMonth()]+' al '+e.getDate()+' de '+MESES[e.getMonth()];
+  }
+  function fechaEspanola(iso){ if(!iso) return ''; var d=fromISO(iso); return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(); }
+
+  function parseNum(v){
+    if(v===null || v===undefined) return 0;
+    var s = String(v).replace(/[^\d,.\-]/g,'').replace(',','.');
+    var n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+  function fmtEUR(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
+  function fmtPct(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtHoras(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function escapeHTML(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  function toMinutes(hhmm){ if(!hhmm) return null; var p=hhmm.split(':'); return parseInt(p[0],10)*60+parseInt(p[1],10); }
+  function fmtHM(hhmm){ if(!hhmm) return ''; return hhmm.replace(/^0/,'')+'h'; }
+
+  function computeTramosNet(tramos){
+    var totalMin=0;
+    (tramos||[]).forEach(function(t){
+      if(!t.entrada||!t.salida) return;
+      var mIn=toMinutes(t.entrada), mOut=toMinutes(t.salida);
+      var diff=mOut-mIn; if(diff<0) diff+=24*60;
+      if(t.descanso) diff -= (t.descansoMin||0);
+      if(diff<0) diff=0;
+      totalMin+=diff;
+    });
+    return totalMin/60;
+  }
+  function observacionesTexto(tramos){
+    return (tramos||[]).filter(function(t){return t.entrada&&t.salida;}).map(function(t){return fmtHM(t.entrada)+' a '+fmtHM(t.salida);}).join(' / ');
+  }
+
+  function findTarifaForDate(iso){
+    var candidates = state.tarifas.filter(function(t){return t.vigenteDesde<=iso;}).sort(function(a,b){return b.vigenteDesde.localeCompare(a.vigenteDesde);});
+    if(candidates.length) return candidates[0];
+    var sorted = state.tarifas.slice().sort(function(a,b){return a.vigenteDesde.localeCompare(b.vigenteDesde);});
+    return sorted[0] || null;
+  }
+  function cotizTrabPct(tarifa){
+    if(!tarifa||!tarifa.cotiz) return 0;
+    var c=tarifa.cotiz;
+    return (c.contComunes.trab||0)+(c.desempleo.trab||0)+(c.formProfesional.trab||0)+(c.mei.trab||0);
+  }
+
+  function mostRecentMonthWithData(){
+    var keys = Object.keys(state.entries).filter(function(k){ return computeTramosNet(state.entries[k].tramos||[])>0; });
+    if(!keys.length) return null;
+    keys.sort();
+    return monthKey(keys[keys.length-1]);
+  }
+
+  function computeNominaRange(startISO,endISO){
+    var cur=startISO;
+    var totalHoras=0, sumBase=0, sumExtra=0, sumVac=0, diasConDatos=0;
+    var tarifaIds={};
+    var tarifaIdList=[];
+    while(cur<=endISO){
+      var entry = state.entries[cur];
+      if(entry){
+        var horas = computeTramosNet(entry.tramos||[]);
+        if(horas>0){
+          var tarifa = findTarifaForDate(cur);
+          if(tarifa){
+            diasConDatos++;
+            if(!tarifaIds[tarifa.id]){ tarifaIds[tarifa.id]=true; tarifaIdList.push(tarifa.id); }
+            totalHoras += horas;
+            sumBase += horas*tarifa.salarioBase;
+            sumExtra += horas*tarifa.plusExtra;
+            sumVac += horas*tarifa.plusVacaciones;
+          }
+        }
+      }
+      cur = addDaysISO(cur,1);
+    }
+    var totalDevengado = sumBase+sumExtra+sumVac;
+    var tarifaFinal = findTarifaForDate(endISO);
+    var ssPct = cotizTrabPct(tarifaFinal);
+    var tarifaUsada = tarifaIdList.length===1 ? state.tarifas.find(function(t){return t.id===tarifaIdList[0];}) : tarifaFinal;
+    return {
+      totalHoras:totalHoras, sumBase:sumBase, sumExtra:sumExtra, sumVac:sumVac,
+      totalDevengado:totalDevengado, ssPct:ssPct, diasConDatos:diasConDatos,
+      tarifaMixed: tarifaIdList.length>1, tarifaUsada:tarifaUsada
+    };
+  }
+
+  function payslipRow(name,calc,val){
+    return '<div class="payslip-row"><div><div>'+name+'</div><div class="concept-calc">'+calc+'</div></div><span class="val">'+val+'</span></div>';
+  }
+  function renderPayslipBody(container, nomina, irpfPct){
+    if(!nomina || nomina.diasConDatos===0){
+      container.innerHTML = '<div class="payslip-row" style="justify-content:center;color:var(--muted);">Sin jornadas registradas en este periodo.</div>';
+      return {irpfImporte:0, ssImporte:0, liquido:0};
+    }
+    var t = nomina.tarifaUsada;
+    var html='';
+    html += payslipRow('SALARIO BASE', fmtEUR(t.salarioBase)+' &times; '+fmtHoras(nomina.totalHoras)+' h', fmtEUR(nomina.sumBase));
+    html += payslipRow('P.EXTRA PRORRAT', fmtEUR(t.plusExtra)+' &times; '+fmtHoras(nomina.totalHoras)+' h', fmtEUR(nomina.sumExtra));
+    html += payslipRow('P.P.VACACIONES', fmtEUR(t.plusVacaciones)+' &times; '+fmtHoras(nomina.totalHoras)+' h', fmtEUR(nomina.sumVac));
+    html += '<div class="payslip-row subtotal"><span>Total devengado</span><span class="val">'+fmtEUR(nomina.totalDevengado)+'</span></div>';
+    html += '<div class="payslip-row section">Deducciones</div>';
+    var irpfImporte = nomina.totalDevengado*irpfPct/100;
+    var ssImporte = nomina.totalDevengado*nomina.ssPct/100;
+    html += '<div class="payslip-row deduct"><span>DTO. I.R.P.F. ('+fmtPct(irpfPct)+'%)</span><span class="val">&minus;'+fmtEUR(irpfImporte)+'</span></div>';
+    html += '<div class="payslip-row deduct"><span>Seg. Social trab. ('+fmtPct(nomina.ssPct)+'%)</span><span class="val">&minus;'+fmtEUR(ssImporte)+'</span></div>';
+    var liquido = nomina.totalDevengado - irpfImporte - ssImporte;
+    html += '<div class="payslip-row total"><span>Líquido a percibir</span><span class="val">'+fmtEUR(liquido)+'</span></div>';
+    container.innerHTML = html;
+    return {irpfImporte:irpfImporte, ssImporte:ssImporte, liquido:liquido};
+  }
+
+  function showToast(msg){
+    var toast=document.getElementById('toast');
+    document.getElementById('toast-text').textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+  }
+
+  var titles = {
+    registro:  {eyebrow:"Ficha diaria", title:"Control de horas", sub:"Registra, comprueba y guarda tus jornadas"},
+    listado:   {eyebrow:"Historial", title:"Listado mensual", sub:"Todas las jornadas del mes, día a día"},
+    nominas:   {eyebrow:"Comprobación", title:"Nóminas", sub:"Verifica cada nómina o consulta el resumen"},
+    ajustes:   {eyebrow:"Configuración", title:"Ajustes", sub:"Condiciones, descuentos y copia de seguridad"}
+  };
+  function switchToView(v){
+    document.querySelectorAll('.navbtn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')===v); });
+    document.querySelectorAll('.view').forEach(function(sec){ sec.classList.remove('active'); });
+    document.getElementById('view-'+v).classList.add('active');
+    var t=titles[v];
+    document.getElementById('topbar-eyebrow').textContent=t.eyebrow;
+    document.getElementById('topbar-title').textContent=t.title;
+    document.getElementById('topbar-sub').textContent=t.sub;
+    if(v==='listado') renderListado();
+    if(v==='nominas'){ renderVerificar(); renderResumen(); }
+    if(v==='ajustes') renderAjustes();
+    if(v==='registro') renderRegistro();
+  }
+  document.querySelectorAll('.navbtn').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchToView(btn.getAttribute('data-view')); });
+  });
+
+  /* ================= REGISTRO ================= */
+  var regCurrentDate = todayISO();
+
+  function tramoCardHTML(t,index,total){
+    var showRemove = total>1;
+    return '<div class="tramo-card">'+
+      '<div class="tramo-header"><span>Tramo '+(index+1)+'</span><button class="tramo-remove" style="display:'+(showRemove?'block':'none')+';">Eliminar</button></div>'+
+      '<div class="tramo-times">'+
+        '<div class="time-field"><label>Entrada</label><input type="time" class="tin" value="'+(t.entrada||'')+'"></div>'+
+        '<div class="time-field"><label>Salida</label><input type="time" class="tout" value="'+(t.salida||'')+'"></div>'+
+      '</div>'+
+      '<label class="descanso-toggle">'+
+        '<input type="checkbox" class="descanso-check" '+(t.descanso?'checked':'')+'>'+
+        '<span>Descanso bocadillo</span>'+
+        '<input type="number" class="descanso-min" value="'+(t.descansoMin!=null?t.descansoMin:15)+'" min="0" step="5" '+(t.descanso?'':'disabled')+'>'+
+        '<span class="descanso-unit">min</span>'+
+      '</label>'+
+    '</div>';
+  }
+  function renumberTramoCards(){
+    var cards = document.querySelectorAll('#tramos-list .tramo-card');
+    cards.forEach(function(card,i){
+      card.querySelector('.tramo-header span').textContent='Tramo '+(i+1);
+      var rm=card.querySelector('.tramo-remove');
+      if(rm) rm.style.display = cards.length>1?'block':'none';
+    });
+  }
+  function bindTramoCardEvents(card){
+    card.querySelectorAll('input').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        if(inp.classList.contains('descanso-check')){
+          card.querySelector('.descanso-min').disabled = !inp.checked;
+        }
+        recalcRegistro();
+      });
+    });
+    var rm = card.querySelector('.tramo-remove');
+    if(rm){
+      rm.addEventListener('click', function(){
+        card.remove();
+        renumberTramoCards();
+        recalcRegistro();
+      });
+    }
+  }
+  function renderTramosDOM(tramosArray){
+    var list = document.getElementById('tramos-list');
+    list.innerHTML='';
+    var arr = (tramosArray && tramosArray.length) ? tramosArray : [{entrada:'06:00',salida:'14:00',descanso:true,descansoMin:15}];
+    arr.forEach(function(t,i){
+      var wrap=document.createElement('div');
+      wrap.innerHTML = tramoCardHTML(t,i,arr.length);
+      var card = wrap.firstElementChild;
+      list.appendChild(card);
+      bindTramoCardEvents(card);
+    });
+    recalcRegistro();
+  }
+  function readTramosFromDOM(){
+    var cards = document.querySelectorAll('#tramos-list .tramo-card');
+    var arr=[];
+    cards.forEach(function(card){
+      arr.push({
+        entrada: card.querySelector('.tin').value,
+        salida: card.querySelector('.tout').value,
+        descanso: card.querySelector('.descanso-check').checked,
+        descansoMin: parseInt(card.querySelector('.descanso-min').value||'0',10)
+      });
+    });
+    return arr;
+  }
+  function recalcRegistro(){
+    var tramos = readTramosFromDOM();
+    var horas = computeTramosNet(tramos);
+    document.getElementById('hr-value').innerHTML = fmtHoras(horas)+'<span>h</span>';
+    var obs = observacionesTexto(tramos);
+    var singleDescanso = tramos.length===1 && tramos[0].descanso;
+    var note = singleDescanso ? (' &middot; bocadillo '+tramos[0].descansoMin+' min') : '';
+    document.getElementById('hr-breakdown').innerHTML = (obs || 'Indica entrada y salida') + note;
+  }
+  function renderRegistro(){
+    var iso = regCurrentDate;
+    var d = fromISO(iso);
+    document.getElementById('reg-dow').textContent = DOW_FULL[d.getDay()];
+    document.getElementById('reg-daynum').textContent = pad2(d.getDate())+'/'+pad2(d.getMonth()+1);
+    document.getElementById('reg-badge-hoy').style.visibility = (iso===todayISO()) ? 'visible' : 'hidden';
+    document.getElementById('reg-date-input').value = iso;
+    var entry = state.entries[iso];
+    renderTramosDOM(entry ? entry.tramos : null);
+    document.getElementById('note-input').value = entry ? (entry.nota||'') : '';
+    document.getElementById('btn-eliminar-dia').style.display = entry ? 'block' : 'none';
+  }
+
+  document.getElementById('btn-day-prev').addEventListener('click', function(){ regCurrentDate=addDaysISO(regCurrentDate,-1); renderRegistro(); });
+  document.getElementById('btn-day-next').addEventListener('click', function(){ regCurrentDate=addDaysISO(regCurrentDate,1); renderRegistro(); });
+  document.getElementById('reg-date-center').addEventListener('click', function(){
+    var inp = document.getElementById('reg-date-input');
+    if(inp.showPicker){ try{ inp.showPicker(); }catch(e){ inp.focus(); } } else { inp.focus(); }
+  });
+  document.getElementById('reg-date-input').addEventListener('change', function(e){
+    if(e.target.value){ regCurrentDate = e.target.value; renderRegistro(); }
+  });
+  document.getElementById('chip-turno-habitual').addEventListener('click', function(){
+    renderTramosDOM([{entrada:'06:00',salida:'14:00',descanso:true,descansoMin:15}]);
+  });
+  document.getElementById('btn-add-tramo').addEventListener('click', function(){
+    var current=readTramosFromDOM();
+    if(current.length>=3) return;
+    current.push({entrada:'',salida:'',descanso:false,descansoMin:15});
+    renderTramosDOM(current);
+  });
+  document.getElementById('btn-guardar').addEventListener('click', function(){
+    var tramos = readTramosFromDOM();
+    var valid = tramos.filter(function(t){return t.entrada&&t.salida;});
+    if(valid.length===0){ showToast('Indica al menos entrada y salida'); return; }
+    state.entries[regCurrentDate] = { tramos:tramos, nota:document.getElementById('note-input').value.trim() };
+    saveState();
+    document.getElementById('btn-eliminar-dia').style.display='block';
+    showToast('Guardado ✓');
+    attemptShareBackup();
+  });
+  document.getElementById('btn-eliminar-dia').addEventListener('click', function(){
+    delete state.entries[regCurrentDate];
+    saveState();
+    renderRegistro();
+    showToast('Eliminado');
+  });
+
+  /* ================= LISTADO ================= */
+  var listadoMonth = monthKey(todayISO());
+  function renderListado(){
+    document.getElementById('listado-month-label').textContent = monthLabel(listadoMonth);
+    var range = monthDaysRange(listadoMonth);
+    var start=range[0], end=range[1];
+    var keys = Object.keys(state.entries).filter(function(k){return k>=start&&k<=end;}).sort().reverse();
+    var totalHoras=0;
+    var listEl = document.getElementById('ficha-list');
+    if(keys.length===0){
+      var hintMonth = mostRecentMonthWithData();
+      var hintHTML = '';
+      if(hintMonth && hintMonth!==listadoMonth){
+        hintHTML = '<p style="margin-top:10px;"><a href="#" id="link-goto-data-month" style="color:var(--ink-900);font-weight:700;text-decoration:underline;">Ir a '+monthLabel(hintMonth)+', donde s&iacute; hay jornadas &#8250;</a></p>';
+      }
+      listEl.innerHTML = '<div class="empty-state"><p class="empty-icon">&#128197;</p><p><strong>Sin jornadas este mes.</strong></p><p>Registra tu primer día desde la pestaña Registro.</p>'+hintHTML+'</div>';
+      var gotoLink = document.getElementById('link-goto-data-month');
+      if(gotoLink){
+        gotoLink.addEventListener('click', function(e){
+          e.preventDefault();
+          listadoMonth = hintMonth;
+          renderListado();
+        });
+      }
+    } else {
+      var html='';
+      keys.forEach(function(k){
+        var entry=state.entries[k];
+        var horas=computeTramosNet(entry.tramos||[]);
+        totalHoras+=horas;
+        var d=fromISO(k);
+        html += '<div class="ficha" data-date="'+k+'">'+
+          '<div class="ficha-date"><p class="ficha-dow">'+DOW3[d.getDay()]+'</p><p class="ficha-day">'+pad2(d.getDate())+'</p></div>'+
+          '<div class="ficha-body"><div><p class="ficha-hours">'+fmtHoras(horas)+'<span> h</span></p>'+(entry.nota?'<p class="ficha-note">'+escapeHTML(entry.nota)+'</p>':'')+'</div><span class="ficha-edit-icon">&#9998;</span></div>'+
+        '</div>';
+      });
+      listEl.innerHTML = html;
+      listEl.querySelectorAll('.ficha').forEach(function(f){
+        f.addEventListener('click', function(){
+          regCurrentDate = f.getAttribute('data-date');
+          switchToView('registro');
+        });
+      });
+    }
+    document.getElementById('stat-dias').textContent = keys.length;
+    document.getElementById('stat-horas').textContent = fmtHoras(totalHoras);
+
+    var printBtn = document.getElementById('btn-print-listado');
+    if(keys.length===0){
+      printBtn.disabled = true;
+      printBtn.innerHTML = '&#128424; Sin jornadas que imprimir';
+    } else {
+      printBtn.disabled = false;
+      printBtn.innerHTML = '&#128424; Imprimir / PDF';
+    }
+  }
+  document.getElementById('btn-month-prev').addEventListener('click', function(){ listadoMonth=addMonths(listadoMonth,-1); renderListado(); });
+  document.getElementById('btn-month-next').addEventListener('click', function(){ listadoMonth=addMonths(listadoMonth,1); renderListado(); });
+  function decimalToHM(h){
+    var totalMin = Math.round((h||0)*60);
+    var hh = Math.floor(totalMin/60);
+    var mm = totalMin%60;
+    return hh+':'+pad2(mm);
+  }
+  function populatePrintParte(ym){
+    var p = ym.split('-').map(Number);
+    var lastDay = new Date(p[0],p[1],0).getDate();
+    var bodyHTML='', totalMin=0;
+    for(var day=1; day<=lastDay; day++){
+      var iso = ym+'-'+pad2(day);
+      var entry = state.entries[iso];
+      var horas = entry ? computeTramosNet(entry.tramos||[]) : 0;
+      if(entry && horas>0){
+        totalMin += Math.round(horas*60);
+        var obs = observacionesTexto(entry.tramos) + (entry.nota ? ' — '+entry.nota : '');
+        bodyHTML += '<tr><td>'+day+'</td><td>'+decimalToHM(horas)+'</td><td></td><td></td><td></td><td></td><td></td><td>'+escapeHTML(obs)+'</td></tr>';
+      } else {
+        bodyHTML += '<tr class="pr-empty"><td>'+day+'</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+      }
+    }
+    document.getElementById('parte-body').innerHTML = bodyHTML;
+    var totalH = totalMin/60;
+    document.getElementById('parte-foot').innerHTML = '<tr class="pr-total-row"><td colspan="6">TOTAL</td><td colspan="2">'+fmtHoras(totalH)+' horas &nbsp;('+decimalToHM(totalH)+')</td></tr>';
+    document.getElementById('parte-anio').textContent = p[0];
+    var mesChecks = '';
+    for(var m=1; m<=12; m++){
+      mesChecks += '<span class="pr-mes-box'+(m===p[1]?' pr-mes-active':'')+'">'+m+'<span class="pr-checkbox">'+(m===p[1]?'&#10005;':'')+'</span></span>';
+    }
+    document.getElementById('parte-mes-checks').innerHTML = mesChecks;
+    document.getElementById('parte-centrotrabajo').textContent = state.perfil.empresaUsuaria;
+    document.getElementById('parte-colaborador').textContent = state.perfil.nombre;
+    document.getElementById('parte-dni').textContent = state.perfil.dni;
+  }
+  function printWithFilename(filename, printFn){
+    var originalTitle = document.title;
+    document.title = filename;
+    printFn();
+    setTimeout(function(){ document.title = originalTitle; }, 800);
+  }
+
+  document.getElementById('btn-print-listado').addEventListener('click', function(){
+    var range = monthDaysRange(listadoMonth);
+    var hasAny = Object.keys(state.entries).some(function(k){
+      return k>=range[0] && k<=range[1] && computeTramosNet(state.entries[k].tramos||[])>0;
+    });
+    if(!hasAny){ showToast('No hay jornadas este mes para imprimir'); return; }
+    populatePrintParte(listadoMonth);
+    document.getElementById('print-root').classList.remove('print-active');
+    document.getElementById('print-parte').classList.add('print-active');
+    var p = listadoMonth.split('-').map(Number);
+    var filename = MESES[p[1]-1]+'-'+String(p[0]).slice(-2);
+    printWithFilename(filename, function(){ window.print(); });
+  });
+
+  /* ================= NOMINAS ================= */
+  var currentSubtab = 'verificar';
+  var resumenMonth = monthKey(todayISO());
+
+  function updatePrintNominaBtn(hasData){
+    var printBtn = document.getElementById('btn-print-nomina');
+    if(hasData){
+      printBtn.disabled = false;
+      printBtn.innerHTML = '&#128424; Imprimir / PDF';
+    } else {
+      printBtn.disabled = true;
+      printBtn.innerHTML = '&#128424; Sin datos que imprimir';
+    }
+  }
+
+  function renderVerificar(){
+    var desde=document.getElementById('periodo-desde').value;
+    var hasta=document.getElementById('periodo-hasta').value;
+    var irpfPct=parseNum(document.getElementById('periodo-irpf').value);
+    var bannerSlot=document.getElementById('match-banner-slot');
+    if(!desde||!hasta||desde>hasta){
+      document.getElementById('verificar-head-sub').textContent='Elige un periodo válido';
+      document.getElementById('verificar-body').innerHTML='';
+      bannerSlot.innerHTML='';
+      if(currentSubtab==='verificar') updatePrintNominaBtn(false);
+      return null;
+    }
+    var nomina=computeNominaRange(desde,hasta);
+    var categoria = state.perfil.categoria || '';
+    document.getElementById('verificar-head-sub').innerHTML = periodoHumano(desde,hasta)+(categoria?' &middot; '+escapeHTML(categoria):'')+(nomina.diasConDatos? ' &middot; '+fmtHoras(nomina.totalHoras)+' h' : '');
+    var result = renderPayslipBody(document.getElementById('verificar-body'), nomina, irpfPct);
+    var realStr = document.getElementById('periodo-liquido-real').value;
+    if(realStr && nomina.diasConDatos>0){
+      var real=parseNum(realStr);
+      var diff=Math.abs(real-result.liquido);
+      if(diff<0.05){
+        bannerSlot.innerHTML='<div class="match-banner">&#10003; Coincide con la n&oacute;mina recibida</div>';
+      } else {
+        bannerSlot.innerHTML='<div class="match-banner warn">&#9888; Difiere en '+fmtEUR(diff)+' de la n&oacute;mina recibida</div>';
+      }
+    } else {
+      bannerSlot.innerHTML='';
+    }
+    if(currentSubtab==='verificar') updatePrintNominaBtn(nomina.diasConDatos>0);
+    return {desde:desde, hasta:hasta, irpfPct:irpfPct, nomina:nomina, result:result};
+  }
+  function renderResumen(){
+    document.getElementById('resumen-month-label').textContent = monthLabel(resumenMonth);
+    document.getElementById('resumen-head-title').textContent = 'Resumen · '+monthLabel(resumenMonth);
+    var range = monthDaysRange(resumenMonth);
+    var irpfPct=parseNum(document.getElementById('resumen-irpf').value);
+    var nomina = computeNominaRange(range[0],range[1]);
+    document.getElementById('resumen-head-sub').textContent = 'Todo el mes'+(nomina.diasConDatos ? ' · '+fmtHoras(nomina.totalHoras)+' h' : '');
+    var result = renderPayslipBody(document.getElementById('resumen-body'), nomina, irpfPct);
+    var hintEl = document.getElementById('resumen-goto-hint');
+    if(hintEl) hintEl.remove();
+    if(!nomina.diasConDatos){
+      var hintMonth = mostRecentMonthWithData();
+      if(hintMonth && hintMonth!==resumenMonth){
+        var p = document.createElement('p');
+        p.id = 'resumen-goto-hint';
+        p.style.marginTop = '10px';
+        p.innerHTML = '<a href="#" id="link-goto-resumen-month" style="color:var(--ink-900);font-weight:700;text-decoration:underline;">Ir a '+monthLabel(hintMonth)+', donde s&iacute; hay jornadas &#8250;</a>';
+        document.getElementById('resumen-body').insertAdjacentElement('afterend', p);
+        document.getElementById('link-goto-resumen-month').addEventListener('click', function(e){
+          e.preventDefault();
+          resumenMonth = hintMonth;
+          renderResumen();
+        });
+      }
+    }
+    if(currentSubtab==='resumen') updatePrintNominaBtn(nomina.diasConDatos>0);
+    return {desde:range[0], hasta:range[1], irpfPct:irpfPct, nomina:nomina, result:result};
+  }
+
+  ['periodo-desde','periodo-hasta','periodo-irpf','periodo-liquido-real'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', renderVerificar);
+  });
+  document.getElementById('resumen-irpf').addEventListener('input', renderResumen);
+  document.getElementById('btn-resumen-month-prev').addEventListener('click', function(){ resumenMonth=addMonths(resumenMonth,-1); renderResumen(); });
+  document.getElementById('btn-resumen-month-next').addEventListener('click', function(){ resumenMonth=addMonths(resumenMonth,1); renderResumen(); });
+
+  document.querySelectorAll('.subtab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.subtab-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      currentSubtab = btn.getAttribute('data-sub');
+      document.getElementById('nom-verificar').style.display = currentSubtab==='verificar' ? 'block' : 'none';
+      document.getElementById('nom-resumen').style.display = currentSubtab==='resumen' ? 'block' : 'none';
+      if(currentSubtab==='verificar') renderVerificar(); else renderResumen();
+    });
+  });
+
+  function populatePrintRoot(data){
+    document.getElementById('pr-ett-nombre').textContent = (state.ett.nombre||'').toUpperCase();
+    document.getElementById('pr-ett-addr').textContent = [state.ett.direccion,state.ett.poblacion,state.ett.telefono].filter(Boolean).join(' · ');
+    document.getElementById('pr-worker-nombre').textContent = (state.perfil.nombre||'').toUpperCase();
+    document.getElementById('pr-worker-addr').textContent = [state.perfil.direccion, state.perfil.poblacion].filter(Boolean).join(' · ');
+    document.getElementById('pr-empresa-nombre').textContent = state.ett.nombre;
+    document.getElementById('pr-ccc').textContent = state.ett.ccc;
+    document.getElementById('pr-nif').textContent = state.ett.nif;
+    document.getElementById('pr-nombre-linea').textContent = state.perfil.nombre;
+    document.getElementById('pr-afiliacion').textContent = state.perfil.afiliacion;
+    document.getElementById('pr-categoria').textContent = state.perfil.categoria;
+    document.getElementById('pr-tarifa').textContent = state.perfil.gTarifa;
+    document.getElementById('pr-periodo').textContent = periodoHumano(data.desde,data.hasta);
+    document.getElementById('pr-codtrab').textContent = state.perfil.codTrabajador;
+    document.getElementById('pr-remu').textContent = fmtEUR(data.nomina.totalDevengado);
+    document.getElementById('pr-base-tot').textContent = fmtEUR(data.nomina.totalDevengado);
+    document.getElementById('pr-fecha-alta').textContent = fechaEspanola(state.perfil.fechaAlta);
+    document.getElementById('pr-antig').textContent = fechaEspanola(state.perfil.antiguedad);
+
+    var tarifa = data.nomina.tarifaUsada;
+    var base = data.nomina.totalDevengado;
+    var c = tarifa.cotiz;
+    var rows = [
+      ['Cont. Comunes', c.contComunes.emp, c.contComunes.trab],
+      ['AT y EP', c.atEp.emp, null],
+      ['Desempleo', c.desempleo.emp, c.desempleo.trab],
+      ['Form. Profesional', c.formProfesional.emp, c.formProfesional.trab],
+      ['FOGASA', c.fogasa.emp, null],
+      ['M.E.I.', c.mei.emp, c.mei.trab]
+    ];
+    var empTotal=0, trabTotal=0, bodyHTML='';
+    rows.forEach(function(r){
+      var empImp = base*r[1]/100; empTotal+=empImp;
+      var trabImp = r[2]!=null ? base*r[2]/100 : null;
+      if(trabImp!=null) trabTotal+=trabImp;
+      bodyHTML += '<tr><td>'+r[0]+'</td><td>'+fmtEUR(base)+'</td><td>'+fmtPct(r[1])+'</td><td>'+fmtEUR(empImp)+'</td><td>'+(r[2]!=null?fmtPct(r[2]):'&mdash;')+'</td><td>'+(trabImp!=null?fmtEUR(trabImp):'&mdash;')+'</td></tr>';
+    });
+    document.getElementById('pr-cotiz-body').innerHTML = bodyHTML;
+    document.getElementById('pr-cotiz-foot').innerHTML = '<tr class="pr-subtotal"><td colspan="3">Total aportaciones</td><td>'+fmtEUR(empTotal)+'</td><td></td><td>'+fmtEUR(trabTotal)+'</td></tr>';
+
+    var cbody='';
+    cbody += '<tr><td>SALARIO BASE</td><td>'+fmtEUR(tarifa.salarioBase)+'</td><td>'+fmtHoras(data.nomina.totalHoras)+'</td><td>'+fmtEUR(data.nomina.sumBase)+'</td><td></td></tr>';
+    cbody += '<tr><td>P.EXTRA PRORRAT</td><td>'+fmtEUR(tarifa.plusExtra)+'</td><td>'+fmtHoras(data.nomina.totalHoras)+'</td><td>'+fmtEUR(data.nomina.sumExtra)+'</td><td></td></tr>';
+    cbody += '<tr><td>P.P.VACACIONES</td><td>'+fmtEUR(tarifa.plusVacaciones)+'</td><td>'+fmtHoras(data.nomina.totalHoras)+'</td><td>'+fmtEUR(data.nomina.sumVac)+'</td><td></td></tr>';
+    cbody += '<tr><td>DTO. I.R.P.F.</td><td>'+fmtEUR(base)+'</td><td>'+fmtPct(data.irpfPct)+'</td><td></td><td>'+fmtEUR(data.result.irpfImporte)+'</td></tr>';
+    cbody += '<tr><td>SEG. SOCIAL TRAB.</td><td>'+fmtEUR(base)+'</td><td>'+fmtPct(data.nomina.ssPct)+'</td><td></td><td>'+fmtEUR(data.result.ssImporte)+'</td></tr>';
+    document.getElementById('pr-concepts-body').innerHTML = cbody;
+    var retTotal = data.result.irpfImporte + data.result.ssImporte;
+    document.getElementById('pr-concepts-foot').innerHTML = '<tr class="pr-subtotal"><td>Fecha '+fechaEspanola(data.hasta)+'</td><td></td><td>Totales</td><td>'+fmtEUR(base)+'</td><td>'+fmtEUR(retTotal)+'</td></tr>';
+    document.getElementById('pr-liquido').textContent = fmtEUR(data.result.liquido);
+  }
+
+  document.getElementById('btn-print-nomina').addEventListener('click', function(){
+    var data = currentSubtab==='verificar' ? renderVerificar() : renderResumen();
+    if(!data || data.nomina.diasConDatos===0){ showToast('No hay datos en este periodo'); return; }
+    populatePrintRoot(data);
+    document.getElementById('print-parte').classList.remove('print-active');
+    document.getElementById('print-root').classList.add('print-active');
+    var dHasta = fromISO(data.hasta);
+    var mesNombre = MESES[dHasta.getMonth()];
+    var filename;
+    if(currentSubtab==='verificar'){
+      var d1 = fromISO(data.desde).getDate();
+      var d2 = dHasta.getDate();
+      filename = 'Nomina '+mesNombre+' '+d1+'-'+d2;
+    } else {
+      filename = 'Nomina '+mesNombre+'-'+String(dHasta.getFullYear()).slice(-2);
+    }
+    printWithFilename(filename, function(){ window.print(); });
+  });
+
+  /* ================= AJUSTES ================= */
+  function fmtEUR2(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+
+  function cotizRowHTML(label,key,vals,hasTrab){
+    return '<div class="cotiz-row" data-key="'+key+'"><span>'+label+'</span>'+
+      '<input class="cotiz-emp" value="'+fmtPct(vals.emp)+'">'+
+      (hasTrab ? '<input class="cotiz-trab" value="'+fmtPct(vals.trab)+'">' : '<input value="—" disabled>')+
+    '</div>';
+  }
+  function tarifaCardHTML(tarifa, isActual){
+    var c=tarifa.cotiz;
+    return '<div class="tarifa-card" data-id="'+tarifa.id+'">'+
+      '<div class="tarifa-header">'+
+        '<div class="tarifa-vigencia"><label>Vigente desde</label><input type="date" class="text-input date-input tarifa-vigente" style="width:135px;" value="'+tarifa.vigenteDesde+'"></div>'+
+        (isActual ? '<span class="tarifa-badge">Actual</span>' : '<button class="tramo-remove tarifa-remove">Eliminar</button>')+
+      '</div>'+
+      '<div class="field-row"><label>Salario base</label><input class="tarifa-base" value="'+fmtEUR2(tarifa.salarioBase)+'"></div>'+
+      '<div class="field-row"><label>Plus pagas extra</label><input class="tarifa-extra" value="'+fmtEUR2(tarifa.plusExtra)+'"></div>'+
+      '<div class="field-row"><label>Plus vacaciones</label><input class="tarifa-vac" value="'+fmtEUR2(tarifa.plusVacaciones)+'"></div>'+
+      '<button class="cotiz-toggle">Cotización Seguridad Social &nbsp;<span class="cotiz-total">'+fmtPct(cotizTrabPct(tarifa))+'% trab.</span> &#8250;</button>'+
+      '<div class="cotiz-detail" style="display:none;">'+
+        '<div class="cotiz-head"><span>Concepto</span><span>Empresa %</span><span>Trab. %</span></div>'+
+        cotizRowHTML('Cont. Comunes','contComunes',c.contComunes,true)+
+        cotizRowHTML('AT y EP','atEp',c.atEp,false)+
+        cotizRowHTML('Desempleo','desempleo',c.desempleo,true)+
+        cotizRowHTML('Form. Profesional','formProfesional',c.formProfesional,true)+
+        cotizRowHTML('FOGASA','fogasa',c.fogasa,false)+
+        cotizRowHTML('M.E.I.','mei',c.mei,true)+
+      '</div>'+
+    '</div>';
+  }
+  function updateCotizTotal(card,tarifa){
+    card.querySelector('.cotiz-total').textContent = fmtPct(cotizTrabPct(tarifa))+'% trab.';
+  }
+  function bindTarifaCardEvents(card){
+    var id = card.getAttribute('data-id');
+    function getT(){ return state.tarifas.find(function(t){return t.id===id;}); }
+    card.querySelector('.tarifa-vigente').addEventListener('change', function(e){
+      getT().vigenteDesde = e.target.value; saveState(); renderTarifas(); renderVerificar(); renderResumen();
+    });
+    card.querySelector('.tarifa-base').addEventListener('change', function(e){ getT().salarioBase=parseNum(e.target.value); e.target.value=fmtEUR2(getT().salarioBase); saveState(); renderVerificar(); renderResumen(); });
+    card.querySelector('.tarifa-extra').addEventListener('change', function(e){ getT().plusExtra=parseNum(e.target.value); e.target.value=fmtEUR2(getT().plusExtra); saveState(); renderVerificar(); renderResumen(); });
+    card.querySelector('.tarifa-vac').addEventListener('change', function(e){ getT().plusVacaciones=parseNum(e.target.value); e.target.value=fmtEUR2(getT().plusVacaciones); saveState(); renderVerificar(); renderResumen(); });
+    var rm=card.querySelector('.tarifa-remove');
+    if(rm){
+      rm.addEventListener('click', function(){
+        if(state.tarifas.length<=1) return;
+        state.tarifas = state.tarifas.filter(function(t){return t.id!==id;});
+        saveState(); renderTarifas(); renderVerificar(); renderResumen();
+      });
+    }
+    var toggle=card.querySelector('.cotiz-toggle');
+    var detail=card.querySelector('.cotiz-detail');
+    toggle.addEventListener('click', function(){
+      var open = detail.style.display!=='none';
+      detail.style.display = open?'none':'block';
+      toggle.classList.toggle('open', !open);
+    });
+    card.querySelectorAll('.cotiz-row').forEach(function(row){
+      var key=row.getAttribute('data-key');
+      var empInp=row.querySelector('.cotiz-emp');
+      var trabInp=row.querySelector('.cotiz-trab');
+      empInp.addEventListener('change', function(){ getT().cotiz[key].emp=parseNum(empInp.value); empInp.value=fmtPct(getT().cotiz[key].emp); saveState(); updateCotizTotal(card,getT()); });
+      if(trabInp){
+        trabInp.addEventListener('change', function(){ getT().cotiz[key].trab=parseNum(trabInp.value); trabInp.value=fmtPct(getT().cotiz[key].trab); saveState(); updateCotizTotal(card,getT()); renderVerificar(); renderResumen(); });
+      }
+    });
+  }
+  function renderTarifas(){
+    var list=document.getElementById('tarifas-list');
+    var sorted = state.tarifas.slice().sort(function(a,b){return b.vigenteDesde.localeCompare(a.vigenteDesde);});
+    list.innerHTML = sorted.map(function(t,i){return tarifaCardHTML(t, i===0);}).join('');
+    list.querySelectorAll('.tarifa-card').forEach(bindTarifaCardEvents);
+  }
+  document.getElementById('btn-add-tarifa').addEventListener('click', function(){
+    var latest = state.tarifas.slice().sort(function(a,b){return b.vigenteDesde.localeCompare(a.vigenteDesde);})[0];
+    var newTarifa = {
+      id: 't'+Date.now(), vigenteDesde: todayISO(),
+      salarioBase: latest?latest.salarioBase:0, plusExtra: latest?latest.plusExtra:0, plusVacaciones: latest?latest.plusVacaciones:0,
+      cotiz: latest ? JSON.parse(JSON.stringify(latest.cotiz)) : {contComunes:{emp:23.60,trab:4.70},atEp:{emp:2.75,trab:0},desempleo:{emp:5.50,trab:1.55},formProfesional:{emp:0.60,trab:0.10},fogasa:{emp:0.20,trab:0},mei:{emp:0.75,trab:0.15}}
+    };
+    state.tarifas.push(newTarifa);
+    saveState();
+    renderTarifas();
+  });
+
+  var perfilFieldMap = {
+    'cfg-nombre':'nombre','cfg-dni':'dni','cfg-afiliacion':'afiliacion','cfg-categoria':'categoria',
+    'cfg-codtrab':'codTrabajador','cfg-gtarifa':'gTarifa','cfg-fechaalta':'fechaAlta','cfg-antiguedad':'antiguedad',
+    'cfg-empresausuaria':'empresaUsuaria', 'cfg-direccion':'direccion', 'cfg-poblacion':'poblacion'
+  };
+  Object.keys(perfilFieldMap).forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(e){
+      state.perfil[perfilFieldMap[id]] = e.target.value;
+      saveState();
+    });
+  });
+  var ettFieldMap = {'cfg-ett-nombre':'nombre','cfg-ett-ccc':'ccc','cfg-ett-nif':'nif','cfg-ett-direccion':'direccion','cfg-ett-poblacion':'poblacion','cfg-ett-telefono':'telefono'};
+  Object.keys(ettFieldMap).forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(e){
+      state.ett[ettFieldMap[id]] = e.target.value;
+      saveState();
+    });
+  });
+  document.getElementById('cfg-irpf').addEventListener('change', function(e){
+    state.irpfDefecto = parseNum(e.target.value);
+    e.target.value = fmtPct(state.irpfDefecto)+' %';
+    saveState();
+  });
+
+  function renderAjustes(){
+    document.getElementById('cfg-nombre').value = state.perfil.nombre;
+    document.getElementById('cfg-dni').value = state.perfil.dni;
+    document.getElementById('cfg-afiliacion').value = state.perfil.afiliacion;
+    document.getElementById('cfg-categoria').value = state.perfil.categoria;
+    document.getElementById('cfg-codtrab').value = state.perfil.codTrabajador;
+    document.getElementById('cfg-gtarifa').value = state.perfil.gTarifa;
+    document.getElementById('cfg-fechaalta').value = state.perfil.fechaAlta;
+    document.getElementById('cfg-antiguedad').value = state.perfil.antiguedad;
+    document.getElementById('cfg-empresausuaria').value = state.perfil.empresaUsuaria;
+    document.getElementById('cfg-direccion').value = state.perfil.direccion||'';
+    document.getElementById('cfg-poblacion').value = state.perfil.poblacion||'';
+    document.getElementById('cfg-ett-nombre').value = state.ett.nombre;
+    document.getElementById('cfg-ett-ccc').value = state.ett.ccc;
+    document.getElementById('cfg-ett-nif').value = state.ett.nif;
+    document.getElementById('cfg-ett-direccion').value = state.ett.direccion;
+    document.getElementById('cfg-ett-poblacion').value = state.ett.poblacion;
+    document.getElementById('cfg-ett-telefono').value = state.ett.telefono;
+    document.getElementById('cfg-irpf').value = fmtPct(state.irpfDefecto)+' %';
+    renderTarifas();
+  }
+
+  /* ================= COPIA DE SEGURIDAD ================= */
+  function exportBackupBlob(){ return new Blob([JSON.stringify(state,null,2)], {type:'application/json'}); }
+  function fallbackDownload(blob,filename){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    var statusEl=document.getElementById('backup-status');
+    if(statusEl) statusEl.textContent='Descargada: '+filename;
+  }
+  function doExportBackup(){
+    var blob=exportBackupBlob();
+    var filename='control_horas_backup_'+todayISO()+'.json';
+    try{
+      var file=new File([blob],filename,{type:'application/json'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'Copia de seguridad'}).then(function(){
+          var statusEl=document.getElementById('backup-status');
+          if(statusEl) statusEl.textContent='Copia compartida ✓';
+        }).catch(function(err){
+          if(err && err.name!=='AbortError'){ fallbackDownload(blob,filename); }
+        });
+        return;
+      }
+    }catch(e){}
+    fallbackDownload(blob,filename);
+  }
+  function attemptShareBackup(){
+    try{
+      var blob=exportBackupBlob();
+      var filename='control_horas_backup_'+todayISO()+'.json';
+      var file=new File([blob],filename,{type:'application/json'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'Copia de seguridad'}).catch(function(){});
+      }
+    }catch(e){}
+  }
+  document.getElementById('btn-export-backup').addEventListener('click', doExportBackup);
+  document.getElementById('btn-export-backup-2').addEventListener('click', doExportBackup);
+  document.getElementById('btn-import-backup').addEventListener('click', function(){
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change', function(e){
+    var file=e.target.files[0];
+    if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var data=JSON.parse(reader.result);
+        if(!data || !data.tarifas || !data.entries) throw new Error('shape');
+        state=data;
+        saveState();
+        renderAjustes(); renderListado(); renderVerificar(); renderResumen(); renderRegistro();
+        document.getElementById('backup-status').textContent='Restaurado ✓';
+      }catch(err){
+        document.getElementById('backup-status').textContent='Archivo no válido';
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  /* ================= INIT ================= */
+  (function init(){
+    var dataMonth = mostRecentMonthWithData();
+    if(dataMonth){
+      listadoMonth = dataMonth;
+      resumenMonth = dataMonth;
+      var dRange = monthDaysRange(dataMonth);
+      document.getElementById('periodo-desde').value = dRange[0];
+      document.getElementById('periodo-hasta').value = dRange[1];
+    } else {
+      var range = monthDaysRange(monthKey(todayISO()));
+      document.getElementById('periodo-desde').value = range[0];
+      document.getElementById('periodo-hasta').value = todayISO();
+    }
+    document.getElementById('periodo-irpf').value = fmtPct(state.irpfDefecto);
+    document.getElementById('resumen-irpf').value = fmtPct(state.irpfDefecto);
+    renderAjustes();
+    renderListado();
+    renderVerificar();
+    renderResumen();
+    renderRegistro();
+  })();
+})();
+</script>
+</body>
+</html>
